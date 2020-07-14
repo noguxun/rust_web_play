@@ -1,0 +1,111 @@
+<html>
+  <head>
+    <meta content="text/html;charset=utf-8" http-equiv="Content-Type"/>
+  </head>
+  <body>
+    <!-- Note the usage of `type=module` here as this is an ES6 module -->
+    <script type="module">
+      // Use ES module import syntax to import functionality from the module
+      // that we have compiled.
+      //
+      // Note that the `default` import is an initialization function which
+      // will "boot" the module and make it ready to use. Currently browsers
+      // don't support natively imported WebAssembly as an ES module, but
+      // eventually the manual initialization won't be required!
+      import init, { add, greet, fetch_sample, fetch_fastly, Chart } from '../pkg/first_wasm.js';
+
+      
+      
+
+      async function run() {
+        // First up we need to actually load the wasm file, so we use the
+        // default export to inform it where the wasm file is located on the
+        // server, and then we wait on the returned promise to wait for the
+        // wasm to be loaded.
+        //
+        // It may look like this: `await init('./pkg/without_a_bundler_bg.wasm');`,
+        // but there is also a handy default inside `init` function, which uses
+        // `import.meta` to locate the wasm file relatively to js file.
+        //
+        // Note that instead of a string you can also pass in any of the
+        // following things:
+        //
+        // * `WebAssembly.Module`
+        //
+        // * `ArrayBuffer`
+        //
+        // * `Response`
+        //
+        // * `Promise` which returns any of the above, e.g. `fetch("./path/to/wasm")`
+        //
+        // This gives you complete control over how the module is loaded
+        // and compiled.
+        //
+        // Also note that the promise, when resolved, yields the wasm module's
+        // exports which is the same as importing the `*_bg` module in other
+        // modes
+        await init();
+
+        const message_area = document.getElementById("message_area");
+
+        // call rust add function
+        const result = add(100, 200);
+        
+        console.log(`100 + 200 = ${result}`);
+        if (result !== 300)
+          throw new Error("wasm addition doesn't work!");
+
+        
+
+        fetch_sample("rustwasm/wasm-bindgen").then((data) => {
+          console.log(data);
+
+          console.log("The latest commit to the wasm-bindgen %s branch is:", data.name);
+          console.log("%s, authored by %s <%s>", data.commit.sha, data.commit.commit.author.name, data.commit.commit.author.email);
+
+          message_area.innerText = data.name + ' ' + data.commit.sha + ' ' + data.commit.commit.author.name, + ' ' + data.commit.commit.author.email;
+        });
+
+        updatePlot();
+
+        // call rust function, which calls JS alert()
+        // greet("hello world");
+      }
+
+      function updatePlot() {
+        const canvas = document.getElementById("canvas");
+
+        const dpr = window.devicePixelRatio || 1;
+        const aspectRatio = canvas.width / canvas.height;
+        const size = Math.min(canvas.width, canvas.parentNode.offsetWidth);
+        canvas.style.width = size + "px";
+        canvas.style.height = size / aspectRatio + "px";
+        canvas.width = size * dpr;
+        canvas.height = size / aspectRatio * dpr;
+        canvas.getContext("2d").scale(dpr, dpr);
+        Chart.mandelbrot(canvas);
+
+      }
+
+      document.getElementById('btn0').onclick = function(){
+        var textbox = document.getElementById('txt0');
+        console.log("update value", textbox.value);
+
+        fetch_fastly(textbox.value).then((data) => {
+          console.log(data);          
+        });
+      };
+
+
+      run();
+    </script>
+
+    <canvas id="canvas" width="600" height="400"></canvas>
+    <p id="message_area"></p>
+    <div id="ctl">
+      <input type="text" id="txt0">
+      <button id="btn0">Update</button>
+    </div>
+
+  </body>
+</html>

@@ -1,0 +1,39 @@
+[package]
+name = "first-wasm"
+version = "0.1.0"
+authors = ["ubuntu"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+crate-type=["cdylib"]
+
+[dependencies]
+wasm-bindgen = { version = "^0.2", features = ["serde-serialize"]  }
+
+js-sys = "0.3.41"
+wasm-bindgen-futures = "0.4.14"
+serde = { version = "1.0.80", features = ["derive"] }
+serde_derive = "^1.0.59"
+
+plotters = "*"
+wee_alloc = "0.4.5"
+
+
+serde_json = "1.0"
+
+
+# feature list can be found at
+# https://github.com/rustwasm/wasm-bindgen/blob/master/crates/web-sys/Cargo.toml
+web-sys = {version = "^0.3",features = [
+  'Document',  
+  'HtmlElement',
+  'Window',
+
+  'Headers',
+  'Request',
+  'RequestInit',
+  'RequestMode',
+  'Response',
+]}
